@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lutece</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+  </script>
+</head>
+
+<body>
+  <h1>Lutece</h1>
+  <input type="number" id="countInput" placeholder="Enter count number">
+  <button onclick="sendCount()">Send</button>
+
+  <script>
+
+    function cb(a = "", e = "", l = "") {
+      if (a) {
+        return alert(a);
+      }
+      if (e) {
+        return console.error(e);
+      }
+      return console.log(l);
+    }
+
+    function sendCount() {
+      var mid = Math.floor(Math.random() * 100000); // Generate a random number to simulate a message id
+      var count = document.getElementById("countInput").value;
+
+      socket.emit('enqueue', {
+        count: count,
+        mid: mid
+      }, cb);
+      // Send the count to the server using socket.io
+      // Add your socket.io code here
+    }
+
+    socket.on('processed', (result, mid) => {
+      console.log(result);
+      console.log(mid);
+    });
+
+  </script>
+</body>
+
+</html>
