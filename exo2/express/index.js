@@ -1,43 +1,118 @@
+const { MongoClient, ServerApiVersion } = require('mongodb');
 const { Server } = require("socket.io");
+var bodyParser = require('body-parser');
 const express = require('express');
+const redis = require('redis');
 const path = require('path');
 const http = require('http');
 const app = express();
+const redisClient = redis.createClient();
 const server = http.createServer(app);
-const redis = require('redis');
-const publisher = redis.createClient();
 const io = new Server(server);
+
 const port = 3000;
 
+const uri = "mongodb+srv://rudyquinternet:LVIvgwEwTs7iDQn4@lutece.yp822na.mongodb.net/";
+// uri laissée volontairement en clair pour faciliter la correction et permettre a qui veut de jouer avec la DB, a cacher en prod
+
+const mongoClient = new MongoClient(uri, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  }
+});
+
+const db = mongoClient.db("Lutece");
+app.use(bodyParser.json());
+
 (async () => {
-  publisher.on('error', (err) => {console.log('Redis error: ', err)});
-  publisher.on('connect', () => {console.log('Redis connected')});
+  redisClient.on('error', (err) => { console.log('Redis error: ', err) });
+  redisClient.on('connect', () => { console.log('Redis connected') });
 
-  await publisher.connect();
+  await redisClient.connect();
 })();
-
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../front.html'));
 });
 
-app.post('/api/bet/processed', (req, res) => {
+app.post('/api/processed', (req, res) => {
   console.log("bet processed", req.body);
   res.status(200).send();
+
+  io.to(req.body.cid)
+    .emit('processed', {
+      result: { idx: req.body.idx },
+      mid: req.body.mid
+    });
 });
 
 server.listen(port, () => {
   console.log(`Server listening at http://localhost:${port}`);
 });
 
-async function addToRedis(sock, count, mid, cb) {
-  console.log("enqueue", count, mid);
+async function bet(sock, count, mid, tid, cb) {
+  console.log("bet", count, mid);
 
-  for(let i = 1; i <= count; i++) {
-    publisher.lPush('bet', `${sock.id}:${mid}:${i}`);
+  if (!sock.userName) return cb('', 'not logged in', '');
+  if (mid < 1 || mid > 5) return cb('', 'invalid match id', '');
+  if (isNaN(count)) return cb('', 'invalid bet value', '');
+  if (tid !== '1' && tid !== '2') return cb('', 'invalid team id', '');
+
+  var betid = Math.floor(Math.random() * 10000);
+
+  for (let i = 0; i < count; i++) {
+    await redisClient.lPush('bet', `${betid}:${sock.userName}:${mid}:${tid}:${i}`);
   }
+  redisClient.lPush('bet', `${sock.userName}:${mid}:${tid}:${count}`);
 
-  return cb('','', `published count ${count} for match ${mid} from socket ${sock.id}`)
+  return cb('', '', `pushed count ${count} on team ${tid} for match ${mid} from socket ${sock.id}`)
+}
+
+async function createAccount(socket, body, cb) {
+
+  try {
+    await mongoClient.connect()
+
+    const collection = db.collection("User");
+    const accs = (await collection.find({ userName: body.userName }).toArray());
+
+    if (accs.length > 0) return cb('', 'account already exists', '');
+
+    const res = await collection.insertOne({ userName: body.userName, password: body.password, balance: 100 });
+    console.log("mongo res", res);
+    socket.emit('connected', { userName: body.userName, balance: 100 });
+    socket.userName = body.userName;
+
+    return cb('', '', 'account created');
+  } catch (e) {
+    console.log(e);
+    return cb('', 'error creating account', '');
+  } finally {
+    await mongoClient.close();
+  }
+}
+
+async function login(socket, body, cb) {
+  try {
+    await mongoClient.connect()
+
+    const collection = db.collection("User");
+    const acc = (await collection.find({ userName: body.userName, password: body.password }).toArray())[0];
+
+    if (!acc) return cb('', 'wrong combination', '');
+
+    socket.emit('connected', { userName: body.userName, balance: acc.balance });
+    socket.userName = body.userName;
+
+    return cb('', '', 'logged in');
+  } catch (e) {
+    console.log(e);
+    return cb('', 'error logging in', '');
+  } finally {
+    await mongoClient.close();
+  }
 }
 
 io.on('connection', (socket) => {
@@ -48,6 +123,14 @@ io.on('connection', (socket) => {
   });
 
   socket.on('enqueue', (body, cb) => {
-    addToRedis(socket, body.count, body.mid, cb);
+    bet(socket, body.count, body.mid, body.tid, cb);
+  });
+
+  socket.on('createAccount', (body, cb) => {
+    createAccount(socket, body, cb);
+  });
+
+  socket.on('login', (body, cb) => {
+    login(socket, body, cb);
   });
 });

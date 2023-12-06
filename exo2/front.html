@@ -9,12 +9,160 @@
   <script>
     const socket = io();
   </script>
+
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    input[type=text],
+    input[type=password],
+    input[type=number] {
+      width: 80%;
+      padding: 12px 20px;
+      margin: 8px 0;
+      display: inline-block;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 14px 20px;
+      margin: 8px 0;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    button:hover {
+      opacity: 0.8;
+    }
+
+    .container {
+      padding: 16px;
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    div {
+      border-radius: 5px;
+      background-color: #f2f2f2;
+      padding: 20px;
+      margin: 20px;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    .dpib {
+      display: inline-block;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 34px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgb(243, 33, 33);
+      -webkit-transition: .4s;
+      transition: .4s;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 26px;
+      width: 26px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      -webkit-transition: .4s;
+      transition: .4s;
+    }
+
+    input:checked+.slider {
+      background-color: rgb(243, 33, 33);
+    }
+
+    input:focus+.slider {
+      box-shadow: 0 0 1px rgb(243, 33, 33);
+    }
+
+    input:checked+.slider:before {
+      -webkit-transform: translateX(26px);
+      -ms-transform: translateX(26px);
+      transform: translateX(26px);
+    }
+
+    /* Rounded sliders */
+    .slider.round {
+      border-radius: 34px;
+    }
+
+    .slider.round:before {
+      border-radius: 50%;
+    }
+  </style>
 </head>
 
 <body>
-  <h1>Lutece</h1>
-  <input type="number" id="countInput" placeholder="Enter count number">
-  <button onclick="sendCount()">Send</button>
+  <div>
+    <h3>Create Account</h3>
+    <input type="text" id="userNameInput" placeholder="Enter userName">
+    <input type="password" id="passwordInput" placeholder="Enter password">
+    <button onclick="createAccount()">Create</button>
+  </div>
+  <br>
+  <div>
+    <h3>Login</h3>
+    <input type="text" id="siUserNameInput" placeholder="Enter userName">
+    <input type="password" id="siPasswordInput" placeholder="Enter password">
+    <button onclick="login()">Login</button>
+  </div>
+  <div>
+    <h3>Lutece</h3>
+    <p class="dpib">connected as : </p>
+    <p class="dpib" id="connectedAs"></p>
+    <br>
+    <p class="dpib">balance : </p>
+    <p class="dpib" id="balance"></p>
+    <p class="dpib">$</p>
+    <br>
+    <p class="dpib">$ : </p><input class="dpib" type="number" id="countInput" placeholder="How much you bet">
+    <br>
+    <p class="dpib">game : </p><input class="dpib" type="number" id="gameInput" placeholder="For which game  (1 to 5)">
+    <br>
+    <p>team</p>
+    <p class="dpib">1</p>
+    <label class="switch dpib">
+      <input title="teamSwitch" type="checkbox">
+      <span class="slider"></span>
+    </label>
+    <p class="dpib">2</p>
+
+    <button onclick="sendCount()">Bet</button>
+  </div>
+  <br>
 
   <script>
 
@@ -28,21 +176,45 @@
       return console.log(l);
     }
 
+    function createAccount() {
+      var userName = document.getElementById("userNameInput").value;
+      var password = document.getElementById("passwordInput").value;
+
+      socket.emit('createAccount', {
+        userName: userName,
+        password: password
+      }, cb);
+    }
+
+    function login() {
+      var userName = document.getElementById("siUserNameInput").value;
+      var password = document.getElementById("siPasswordInput").value;
+
+      socket.emit('login', {
+        userName: userName,
+        password: password
+      }, cb);
+    }
+
     function sendCount() {
-      var mid = Math.floor(Math.random() * 100000); // Generate a random number to simulate a message id
       var count = document.getElementById("countInput").value;
+      var mid = document.getElementById("gameInput").value;
+      var tid = document.getElementById("teamSwitch").checked ? 2 : 1;
 
       socket.emit('enqueue', {
         count: count,
-        mid: mid
+        mid: mid,
+        tid: tid
       }, cb);
-      // Send the count to the server using socket.io
-      // Add your socket.io code here
     }
 
-    socket.on('processed', (result, mid) => {
-      console.log(result);
-      console.log(mid);
+    socket.on('processed', (b) => {
+      console.log("processed", b);
+    });
+
+    socket.on('connected', (b) => {
+      document.getElementById("connectedAs").innerHTML = b.userName;
+      document.getElementById("balance").innerHTML = b.balance;
     });
 
   </script>
