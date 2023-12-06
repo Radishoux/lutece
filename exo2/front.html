@@ -33,7 +33,6 @@
       margin: 8px 0;
       border: none;
       cursor: pointer;
-      width: 100%;
     }
 
     button:hover {
@@ -130,6 +129,7 @@
     <h3>Create Account</h3>
     <input type="text" id="userNameInput" placeholder="Enter userName">
     <input type="password" id="passwordInput" placeholder="Enter password">
+    <br>
     <button onclick="createAccount()">Create</button>
   </div>
   <br>
@@ -137,6 +137,7 @@
     <h3>Login</h3>
     <input type="text" id="siUserNameInput" placeholder="Enter userName">
     <input type="password" id="siPasswordInput" placeholder="Enter password">
+    <br>
     <button onclick="login()">Login</button>
   </div>
   <div>
@@ -144,6 +145,7 @@
     <p class="dpib">connected as : </p>
     <p class="dpib" id="connectedAs"></p>
     <br>
+    <button onclick="socket.emit('update', {}, cb)">Refresh</button>
     <p class="dpib">balance : </p>
     <p class="dpib" id="balance"></p>
     <p class="dpib">$</p>
@@ -152,14 +154,14 @@
     <br>
     <p class="dpib">game : </p><input class="dpib" type="number" id="gameInput" placeholder="For which game  (1 to 5)">
     <br>
-    <p>team</p>
-    <p class="dpib">1</p>
+    <p class="dpib">team : </p>
+    <p class="dpib"> 1</p>
     <label class="switch dpib">
-      <input title="teamSwitch" type="checkbox">
+      <input title="teamSwitch" type="checkbox" id="teamSwitch">
       <span class="slider"></span>
     </label>
     <p class="dpib">2</p>
-
+    <br>
     <button onclick="sendCount()">Bet</button>
   </div>
   <br>

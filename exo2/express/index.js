@@ -24,6 +24,7 @@ const mongoClient = new MongoClient(uri, {
 });
 
 const db = mongoClient.db("Lutece");
+const collection = db.collection("User");
 app.use(bodyParser.json());
 
 (async () => {
@@ -33,6 +34,20 @@ app.use(bodyParser.json());
   await redisClient.connect();
 })();
 
+async function updateClient(socket, cb) {
+  if (!socket.userName) return cb('', 'not logged in', '');
+  try {
+    await mongoClient.connect()
+
+    const balance = (await collection.find({ userName: socket.userName }).toArray())[0].balance;
+    socket.emit('connected', { userName: socket.userName, balance: balance });
+  } catch (e) {
+    console.log(e);
+  } finally {
+    await mongoClient.close();
+  }
+}
+
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../front.html'));
 });
@@ -41,11 +56,15 @@ app.post('/api/processed', (req, res) => {
   console.log("bet processed", req.body);
   res.status(200).send();
 
-  io.to(req.body.cid)
-    .emit('processed', {
-      result: { idx: req.body.idx },
-      mid: req.body.mid
-    });
+  io.sockets.sockets.forEach((socket) => {
+    if (socket.userName === req.body.cid) {
+      socket.emit('processed', {
+        result: { idx: req.body.idx },
+        mid: req.body.mid,
+        body: req.body
+      });
+    }
+  });
 });
 
 server.listen(port, () => {
@@ -56,34 +75,32 @@ async function bet(sock, count, mid, tid, cb) {
   console.log("bet", count, mid);
 
   if (!sock.userName) return cb('', 'not logged in', '');
+  if (isNaN(count) || count < 1) return cb('', 'invalid bet value', '');
   if (mid < 1 || mid > 5) return cb('', 'invalid match id', '');
-  if (isNaN(count)) return cb('', 'invalid bet value', '');
-  if (tid !== '1' && tid !== '2') return cb('', 'invalid team id', '');
+  if (tid !== 1 && tid !== 2) return cb('', 'invalid team id', '');
 
   var betid = Math.floor(Math.random() * 10000);
 
-  for (let i = 0; i < count; i++) {
+  for (let i = 1; i <= count; i++) {
     await redisClient.lPush('bet', `${betid}:${sock.userName}:${mid}:${tid}:${i}`);
   }
-  redisClient.lPush('bet', `${sock.userName}:${mid}:${tid}:${count}`);
 
   return cb('', '', `pushed count ${count} on team ${tid} for match ${mid} from socket ${sock.id}`)
 }
 
 async function createAccount(socket, body, cb) {
-
   try {
     await mongoClient.connect()
 
-    const collection = db.collection("User");
     const accs = (await collection.find({ userName: body.userName }).toArray());
 
     if (accs.length > 0) return cb('', 'account already exists', '');
 
     const res = await collection.insertOne({ userName: body.userName, password: body.password, balance: 100 });
     console.log("mongo res", res);
-    socket.emit('connected', { userName: body.userName, balance: 100 });
+
     socket.userName = body.userName;
+    socket.emit('connected', { userName: socket.userName, balance: 100 });
 
     return cb('', '', 'account created');
   } catch (e) {
@@ -98,13 +115,12 @@ async function login(socket, body, cb) {
   try {
     await mongoClient.connect()
 
-    const collection = db.collection("User");
     const acc = (await collection.find({ userName: body.userName, password: body.password }).toArray())[0];
 
     if (!acc) return cb('', 'wrong combination', '');
 
-    socket.emit('connected', { userName: body.userName, balance: acc.balance });
     socket.userName = body.userName;
+    socket.emit('connected', { userName: socket.userName, balance: acc.balance });
 
     return cb('', '', 'logged in');
   } catch (e) {
@@ -132,5 +148,9 @@ io.on('connection', (socket) => {
 
   socket.on('login', (body, cb) => {
     login(socket, body, cb);
+  });
+
+  socket.on('update', (body, cb) => {
+    updateClient(socket, cb);
   });
 });
