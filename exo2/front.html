@@ -5,12 +5,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Lutece</title>
+  <!-- Include the Socket.IO library -->
   <script src="/socket.io/socket.io.js"></script>
+  <!-- Initialize Socket.IO connection -->
   <script>
     const socket = io();
   </script>
 
   <style>
+    /* Styling for the page */
     body {
       font-family: Arial, Helvetica, sans-serif;
     }
@@ -125,6 +128,7 @@
 </head>
 
 <body>
+  <!-- Create Account Section -->
   <div>
     <h3>Create Account</h3>
     <input type="text" id="userNameInput" placeholder="Enter userName">
@@ -133,6 +137,8 @@
     <button onclick="createAccount()">Create</button>
   </div>
   <br>
+
+  <!-- Login Section -->
   <div>
     <h3>Login</h3>
     <input type="text" id="siUserNameInput" placeholder="Enter userName">
@@ -140,6 +146,8 @@
     <br>
     <button onclick="login()">Login</button>
   </div>
+
+  <!-- Lutece Section -->
   <div>
     <h3>Lutece</h3>
     <p class="dpib">connected as : </p>
@@ -152,7 +160,7 @@
     <br>
     <p class="dpib">$ : </p><input class="dpib" type="number" id="countInput" placeholder="How much you bet">
     <br>
-    <p class="dpib">game : </p><input class="dpib" type="number" id="gameInput" placeholder="For which game  (1 to 5)">
+    <p class="dpib">game : </p><input class="dpib" type="number" id="gameInput" placeholder="For which game (1 to 5)">
     <br>
     <p class="dpib">team : </p>
     <p class="dpib"> 1</p>
@@ -166,8 +174,9 @@
   </div>
   <br>
 
+  <!-- JavaScript Section -->
   <script>
-
+    // Callback function for handling responses
     function cb(a = "", e = "", l = "") {
       if (a) {
         return alert(a);
@@ -178,6 +187,7 @@
       return console.log(l);
     }
 
+    // Function to create a user account
     function createAccount() {
       var userName = document.getElementById("userNameInput").value;
       var password = document.getElementById("passwordInput").value;
@@ -188,6 +198,7 @@
       }, cb);
     }
 
+    // Function to log in
     function login() {
       var userName = document.getElementById("siUserNameInput").value;
       var password = document.getElementById("siPasswordInput").value;
@@ -198,6 +209,7 @@
       }, cb);
     }
 
+    // Function to send bet count
     function sendCount() {
       var count = document.getElementById("countInput").value;
       var mid = document.getElementById("gameInput").value;
@@ -210,15 +222,16 @@
       }, cb);
     }
 
+    // Event listener for 'processed' event
     socket.on('processed', (b) => {
       console.log("processed", b);
     });
 
+    // Event listener for 'connected' event
     socket.on('connected', (b) => {
       document.getElementById("connectedAs").innerHTML = b.userName;
       document.getElementById("balance").innerHTML = b.balance;
     });
-
   </script>
 </body>
 
