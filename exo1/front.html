@@ -5,34 +5,41 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Test technique Winamax</title>
+
+  <!-- Include the Socket.IO client library -->
   <script src="/socket.io/socket.io.js"></script>
   <script>
+    // Initialize Socket.IO client
     const socket = io();
   </script>
 
   <style>
-    .dpib {
-      display: inline-block;
-    }
-
+    /* Style for inline-block elements */
     p {
       display: inline-block;
     }
-
   </style>
 </head>
 
 <body>
   <h1>Test technique Winamax</h1>
+
+  <!-- Input for the count of elements and button to send content -->
   <input title="countInput" type="number" id="countInput">
   <button onclick="sendContent()">Send</button>
   <br>
-  <p>Number of elements: </p><p id="processedElement">0</p><p>/</p><p id="totalElement">0</p>
+
+  <!-- Display the number of processed elements out of total elements -->
+  <p>Number of elements: </p>
+  <p id="processedElement">0</p><p>/</p><p id="totalElement">0</p>
   <br>
-  <p>Time to process: </p><p id="time"></p>
+
+  <!-- Display the time taken to process elements -->
+  <p>Time to process: </p>
+  <p id="time"></p>
 
   <script>
-
+    // Variables to track processed elements, total elements, and processing time
     var processedElement = document.getElementById("processedElement");
     var totalElement = document.getElementById("totalElement");
     var time = document.getElementById("time");
@@ -41,6 +48,7 @@
     var VtotalElement = 0;
     var Vtime = 0;
 
+    // Callback function for handling errors and logging messages
     function cb(a = "", e = "", l = "") {
       if (a) {
         return alert(a);
@@ -51,30 +59,38 @@
       return console.log(l);
     }
 
+    // Function to send content to the server
     function sendContent() {
       var count = document.getElementById("countInput").value;
       var mid = Math.floor(Math.random() * 10000);
 
+      // Initialize variables for tracking progress and time
       VprocessedElement = 0;
       VtotalElement = count;
 
+      // Update displayed values
       processedElement.innerHTML = VprocessedElement;
       totalElement.innerHTML = VtotalElement;
       time.innerHTML = "processing...";
       Vtime = Date.now();
 
+      // Emit 'enqueue' event to the server
       socket.emit('enqueue', {
         count: count,
         mid: mid
       }, cb);
     }
 
+    // Event listener for the 'processed' event from the server
     socket.on('processed', (b) => {
+      // Increment processed element count
       VprocessedElement++;
       processedElement.innerHTML = VprocessedElement;
+
+      // Check if all elements are processed
       if (VprocessedElement == VtotalElement) {
-        Vtime = (Date.now() - Vtime)/1000;
-        // time in seconds
+        // Calculate and display the processing time in seconds
+        Vtime = (Date.now() - Vtime) / 1000;
         time.innerHTML = Vtime + "s";
       }
 

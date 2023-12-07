@@ -31,6 +31,32 @@ Before running the project, make sure you have the following:
 - Redis database server running locally
 - AWS account for running the Game Lambda function
 
+### Installation
+
+1. Navigate to the `express` directory:
+
+    ```bash
+    cd express
+    ```
+
+2. Install Express dependencies:
+
+    ```bash
+    npm install
+    ```
+
+3. Navigate to the `worker` directory:
+
+    ```bash
+    cd ../worker
+    ```
+
+4. Install Worker dependencies:
+
+    ```bash
+    npm install
+    ```
+
 ### Running the Project
 
 1. Start your Redis database:
