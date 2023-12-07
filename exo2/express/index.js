@@ -67,10 +67,6 @@ app.post('/api/processed', (req, res) => {
   });
 });
 
-server.listen(port, () => {
-  console.log(`Server listening at http://localhost:${port}`);
-});
-
 async function bet(sock, count, mid, tid, cb) {
   console.log("bet", count, mid);
 
@@ -153,4 +149,8 @@ io.on('connection', (socket) => {
   socket.on('update', (body, cb) => {
     updateClient(socket, cb);
   });
+});
+
+server.listen(port, () => {
+  console.log(`Server listening at http://localhost:${port}`);
 });

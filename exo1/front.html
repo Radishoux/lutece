@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Test technique Winamax</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+  </script>
+
+  <style>
+    .dpib {
+      display: inline-block;
+    }
+
+    p {
+      display: inline-block;
+    }
+
+  </style>
+</head>
+
+<body>
+  <h1>Test technique Winamax</h1>
+  <input title="countInput" type="number" id="countInput">
+  <button onclick="sendContent()">Send</button>
+  <br>
+  <p>Number of elements: </p><p id="processedElement">0</p><p>/</p><p id="totalElement">0</p>
+  <br>
+  <p>Time to process: </p><p id="time"></p>
+
+  <script>
+
+    var processedElement = document.getElementById("processedElement");
+    var totalElement = document.getElementById("totalElement");
+    var time = document.getElementById("time");
+
+    var VprocessedElement = 0;
+    var VtotalElement = 0;
+    var Vtime = 0;
+
+    function cb(a = "", e = "", l = "") {
+      if (a) {
+        return alert(a);
+      }
+      if (e) {
+        return console.error(e);
+      }
+      return console.log(l);
+    }
+
+    function sendContent() {
+      var count = document.getElementById("countInput").value;
+      var mid = Math.floor(Math.random() * 10000);
+
+      VprocessedElement = 0;
+      VtotalElement = count;
+
+      processedElement.innerHTML = VprocessedElement;
+      totalElement.innerHTML = VtotalElement;
+      time.innerHTML = "processing...";
+      Vtime = Date.now();
+
+      socket.emit('enqueue', {
+        count: count,
+        mid: mid
+      }, cb);
+    }
+
+    socket.on('processed', (b) => {
+      VprocessedElement++;
+      processedElement.innerHTML = VprocessedElement;
+      if (VprocessedElement == VtotalElement) {
+        Vtime = (Date.now() - Vtime)/1000;
+        // time in seconds
+        time.innerHTML = Vtime + "s";
+      }
+
+      console.log("processed", b);
+    });
+  </script>
+</body>
+
+</html>

@@ -24,12 +24,6 @@ var workers = [];
 
 client.connect();
 
-function between(min, max) {
-  return Math.floor(
-    Math.random() * (max - min) + min
-  )
-};
-
 class Worker {
   constructor() {
     this.workingOn = null;
@@ -64,11 +58,11 @@ class Worker {
     });
 
     this.workingOn = null;
-      return this.work();
+    return this.work();
   }
 }
 
-for(let i = 0; i < nbworkers; i++) {
+for (let i = 0; i < nbworkers; i++) {
   workers.push(new Worker());
 }
 
