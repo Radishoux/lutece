@@ -1,4 +1,3 @@
-
 $instancesIndex = $args.IndexOf("--instances")
 if ($instancesIndex -ne -1 -and $instancesIndex -lt ($args.Count - 1)) {
   $instancesValue = $args[$instancesIndex + 1]
