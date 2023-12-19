@@ -1,4 +1,3 @@
-```markdown
 # Winamax Technical Test Project
 
 This project consists of an Express server, a worker, and a testing script to simulate the processing of bets using Socket.IO. The worker processes messages sent by clients, and the testing script allows you to simulate multiple clients sending messages to the server.
@@ -108,4 +107,3 @@ No additional configuration is needed. However, you can adjust the number of ins
 
 - The project uses Node.js, Redis, Express, and Socket.IO.
 - Thanks to the Winamax team for the technical test opportunity.
-```
