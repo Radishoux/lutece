@@ -1,4 +1,3 @@
-```markdown
 # Lutece Betting Platform
 
 The Lutece Betting Platform is a web application that allows users to create accounts, log in, and participate in betting on various games.
@@ -109,6 +108,3 @@ lutece-betting-platform/
 ## Running the Game Lambda
 
 To simulate a game, you can run the provided Lambda function in the `game` folder. Zip the folder and deploy it to any AWS Lambda service.
-```
-
-Let me know if you need any further adjustments!
